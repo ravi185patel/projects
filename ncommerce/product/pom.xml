@@ -55,9 +55,26 @@
 	</dependencyManagement>
 	<build>
 		<plugins>
+			<!-- Spring Boot Plugin -->
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
+			</plugin>
+			<plugin>
+				<groupId>com.google.cloud.tools</groupId>
+				<artifactId>jib-maven-plugin</artifactId>
+				<version>3.3.1</version>
+				<configuration>
+					<to>
+						<image>product-service:latest</image> <!-- You can customize this name -->
+					</to>
+					<container>
+						<ports>
+							<port>9001</port> <!-- Your Spring Boot app port -->
+						</ports>
+						<mainClass>com.ncommerce.product</mainClass> <!-- Change to your main class -->
+					</container>
+				</configuration>
 			</plugin>
 		</plugins>
 	</build>
