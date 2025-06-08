@@ -4,7 +4,7 @@ server:
 spring:
   data:
     mongodb:
-      uri: mongodb://localhost:27017/ecommerce
+      uri: mongodb://host.docker.internal:27017/ecommerce
       # For authenticated connections:
       # uri: mongodb://username:password@localhost:27017/ecommerce?authSource=admin
   application:
@@ -14,4 +14,4 @@ eureka:
   client:
     service-url:
 #      defaultZone: http://localhost:8999/eureka
-        defaultZone: http://discovery-service:8999/eureka
+        defaultZone: http://service-discovery:8999/eureka

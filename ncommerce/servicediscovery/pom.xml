@@ -53,13 +53,13 @@
 				<version>3.3.1</version>
 				<configuration>
 					<to>
-						<image>service-discovery:latest</image> <!-- You can customize this name -->
+						<image>ncommerce/service-discovery:latest</image> <!-- You can customize this name -->
 					</to>
 					<container>
 						<ports>
 							<port>8999</port> <!-- Your Spring Boot app port -->
 						</ports>
-						<mainClass>com.ncommerce.servicediscovery</mainClass> <!-- Change to your main class -->
+						<mainClass>com.ncommerce.servicediscovery.ServicediscoveryApplication</mainClass> <!-- Change to your main class -->
 					</container>
 				</configuration>
 			</plugin>

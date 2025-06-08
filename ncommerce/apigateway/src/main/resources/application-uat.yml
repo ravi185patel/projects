@@ -24,7 +24,7 @@ spring:
 eureka:
   client:
     service-url:
-      defaultZone: http://discovery-service:8999/eureka
+      defaultZone: http://service-discovery:8999/eureka
     register-with-eureka: false  # Gateway usually doesn’t register itself (optional)
     fetch-registry: true         # Enable fetching registry
 
