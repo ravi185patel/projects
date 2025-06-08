@@ -1,0 +1,72 @@
+server:
+  port: 8998
+
+spring:
+  application:
+    name: api-gateway
+
+  cloud:
+    gateway:
+      routes:
+        - id: order-service
+          uri: lb://order-service   # Use Eureka service name here (case-insensitive)
+          predicates:
+            - Path=/order-service/**
+          filters:
+            - StripPrefix=1
+        - id: product-service
+          uri: lb://product-service   # Use Eureka service name here (case-insensitive)
+          predicates:
+            - Path=/product-service/**
+          filters:
+            - StripPrefix=1
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://discovery-service:8999/eureka
+    register-with-eureka: false  # Gateway usually doesn’t register itself (optional)
+    fetch-registry: true         # Enable fetching registry
+
+logging:
+  level:
+    org.springframework.cloud.gateway: DEBUG
+    com.netflix.discovery: INFO
+
+
+#server:
+#  port: 8998
+#
+#spring:
+#  application:
+#    name: api-gateway
+#
+#  cloud:
+#    gateway:
+#     routes:
+#        - id: order-service
+#          uri: http://localhost:9003  # backend service URL
+#          predicates:
+#            - Path=/order-service/**
+#          filters:
+#            - StripPrefix=1
+#
+##eureka:
+##  client:
+##    enabled: false  # Temporarily disable for debugging
+#
+#logging:
+#  level:
+#    org.springframework.cloud.gateway: DEBUG
+#    reactor.netty.http.client: DEBUG
+#
+#eureka:
+#  client:
+#    service-url:
+#      defaultZone: http://localhost:8999/eureka
+#
+##management:
+##  endpoints:
+##    web:
+##      exposure:
+##        include: "*"

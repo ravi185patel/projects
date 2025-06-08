@@ -1,0 +1,41 @@
+server:
+  port: 8998
+
+spring:
+  application:
+    name: api-gateway
+
+  cloud:
+    gateway:
+     routes:
+       - id: order-service
+         uri: lb://order-service   # Use Eureka service name here (case-insensitive)
+         predicates:
+           - Path=/order-service/**
+         filters:
+           - StripPrefix=1
+       - id: product-service
+         uri: lb://product-service   # Use Eureka service name here (case-insensitive)
+         predicates:
+           - Path=/product-service/**
+         filters:
+           - StripPrefix=1
+#eureka:
+#  client:
+#    enabled: false  # Temporarily disable for debugging
+
+logging:
+  level:
+    org.springframework.cloud.gateway: DEBUG
+    reactor.netty.http.client: DEBUG
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8999/eureka
+
+#management:
+#  endpoints:
+#    web:
+#      exposure:
+#        include: "*"

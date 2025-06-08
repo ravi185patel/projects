@@ -1,0 +1,6 @@
+server:
+  port: 8999
+eureka:
+  client:
+    register-with-eureka: false    # Do NOT register itself
+    fetch-registry: false          # Do NOT fetch registry (no other servers)
