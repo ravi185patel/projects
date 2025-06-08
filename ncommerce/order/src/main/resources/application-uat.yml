@@ -3,7 +3,7 @@ server:
 
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/ncommerce
+    url: jdbc:postgresql://host.docker.internal:5432/ncommerce
     username: user
     password: user
     driver-class-name: org.postgresql.Driver
@@ -22,4 +22,4 @@ eureka:
     client:
       service-url:
 #        defaultZone: http://localhost:8999/eureka
-        defaultZone: http://discovery-service:8999/eureka
+        defaultZone: http://service-discovery:8999/eureka
