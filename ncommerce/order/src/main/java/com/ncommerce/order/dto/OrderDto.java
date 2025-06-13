@@ -1,9 +1,6 @@
 package com.ncommerce.order.dto;
 
-import lombok.Data;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -11,6 +8,7 @@ import org.springframework.stereotype.Component;
 @Setter
 @NoArgsConstructor
 @Data
+@ToString
 public class OrderDto {
 
     private Long id;
