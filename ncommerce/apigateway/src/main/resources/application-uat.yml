@@ -25,8 +25,12 @@ eureka:
   client:
     service-url:
       defaultZone: http://service-discovery:8999/eureka
-    register-with-eureka: false  # Gateway usually doesn’t register itself (optional)
+    register-with-eureka: true  # Gateway usually doesn’t register itself (optional)
     fetch-registry: true         # Enable fetching registry
+  instance:
+    hostname: api-gateway
+    prefer-ip-address: false
+    instance-id: ${spring.application.name}:${server.port}
 
 logging:
   level:

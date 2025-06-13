@@ -15,3 +15,7 @@ eureka:
     service-url:
 #      defaultZone: http://localhost:8999/eureka
         defaultZone: http://service-discovery:8999/eureka
+  instance:
+    hostname: product-service
+    prefer-ip-address: false
+    instance-id: ${spring.application.name}:${server.port}

@@ -23,3 +23,8 @@ eureka:
       service-url:
 #        defaultZone: http://localhost:8999/eureka
         defaultZone: http://service-discovery:8999/eureka
+  # Enable fetching registry
+    instance:
+      hostname: order-service
+      prefer-ip-address: false
+      instance-id: ${spring.application.name}:${server.port}
