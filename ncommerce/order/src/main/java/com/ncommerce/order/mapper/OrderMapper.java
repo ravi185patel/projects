@@ -1,6 +1,6 @@
 package com.ncommerce.order.mapper;
 
-import com.ncommerce.order.dto.OrderDto;
+import com.ncommerce.common.dto.OrderDto;
 import com.ncommerce.order.entity.Order;
 import org.springframework.stereotype.Component;
 

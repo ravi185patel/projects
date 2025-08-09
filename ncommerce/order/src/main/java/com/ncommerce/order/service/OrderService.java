@@ -1,19 +1,24 @@
 package com.ncommerce.order.service;
 
-import com.ncommerce.order.constant.PaymentStatus;
+import com.ncommerce.common.constant.EventType;
+import com.ncommerce.common.constant.OrderStatus;
+import com.ncommerce.common.constant.PaymentStatus;
+import com.ncommerce.common.dto.OrderDto;
+import com.ncommerce.common.dto.OrderEvent;
+import com.ncommerce.common.dto.PaymentDto;
+import com.ncommerce.common.dto.ProductDto;
 import com.ncommerce.order.dao.OrderDao;
-import com.ncommerce.order.dto.OrderDto;
-import com.ncommerce.order.dto.PaymentDto;
-import com.ncommerce.order.dto.ProductDto;
 import com.ncommerce.order.entity.Order;
 import com.ncommerce.order.mapper.OrderMapper;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -25,6 +30,12 @@ public class OrderService {
 
     @Autowired
     private RestTemplate restTemplate;
+
+    @Autowired
+    private KafkaTemplate<String, Object> kafkaTemplate;
+
+    @Value("${kafka.topic.name}")
+    private String topicName;
 
     public OrderDto getOrder(Long id){
         return OrderMapper.entityToDto(orderDao.getOrder(id));
@@ -74,12 +85,16 @@ public class OrderService {
                     }
             );
         }catch (Exception e){
-            throw new RuntimeException("Payment got failed....!");
+            throw new RuntimeException("Payment got failed....!"+e);
         }
 
-        if(responsePayment.getStatusCode() != HttpStatus.OK || !responsePayment.getBody().getPaymentStatus().equals(PaymentStatus.SUCCESS)){
+        if(responsePayment.getStatusCode() != HttpStatus.OK
+                || !responsePayment.getBody()
+                                   .getPaymentStatus()
+                                   .equals(PaymentStatus.PAYMENT_RECEIVED)){
             throw new RuntimeException("Payment got failed..!");
         }
+
         urlCheck = "http://product-service/api/product";
         productDto.setStock(productDto.getStock()-order.getQuantity());
         HttpEntity<ProductDto> request = new HttpEntity<>(productDto);
@@ -99,7 +114,12 @@ public class OrderService {
         if(response.getStatusCode() != HttpStatus.OK){
             throw new RuntimeException("Quantity not updated..!");
         }
-        //send notification that your order is placed
+
+        OrderEvent orderEvent = new OrderEvent();
+        orderEvent.setEventType(EventType.ORDER_NOTIFICATION_SENT);
+        orderEvent.setStatus(OrderStatus.CONFIRMED);
+        orderEvent.setEventId(order.getId());
+        kafkaTemplate.send(topicName,orderEvent);
         return orderDto;
     }
 

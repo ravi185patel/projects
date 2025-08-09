@@ -1,6 +1,7 @@
 package com.ncommerce.payment.controller;
 
-import com.ncommerce.payment.dto.PaymentDto;
+
+import com.ncommerce.common.dto.PaymentDto;
 import com.ncommerce.payment.service.PaymentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;

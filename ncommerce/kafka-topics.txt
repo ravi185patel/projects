@@ -1,0 +1,6 @@
+docker run -d --name broker apache/kafka:latest
+docker exec --workdir /opt/kafka/bin/ -it broker sh
+./kafka-topics.sh --bootstrap-server localhost:9092 --create --topic order-topic
+./kafka-topics.sh --bootstrap-server localhost:9092 --create --topic payment-topic
+./kafka-topics.sh --bootstrap-server localhost:9092 --create --topic account-topic
+docker rm -f broker

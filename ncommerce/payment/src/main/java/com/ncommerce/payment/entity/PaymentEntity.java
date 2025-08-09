@@ -1,10 +1,9 @@
 package com.ncommerce.payment.entity;
 
 
-import com.ncommerce.payment.constant.PaymentStatus;
+import com.ncommerce.common.constant.PaymentStatus;
 import jakarta.persistence.*;
 import lombok.*;
-import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
 

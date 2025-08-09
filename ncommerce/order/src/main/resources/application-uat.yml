@@ -18,6 +18,19 @@ spring:
   application:
     name: order-service
 
+  kafka:
+    bootstrap-servers: localhost:9900
+    consumer:
+      group-id: ncommerce
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: '*'
+    producer:
+      key-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+
 eureka:
     client:
       service-url:

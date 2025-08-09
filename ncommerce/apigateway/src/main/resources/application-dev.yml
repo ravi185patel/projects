@@ -26,6 +26,12 @@ spring:
            - Path=/payment-service/**
          filters:
            - StripPrefix=1
+       - id: notification-service
+         uri: lb://notification-service   # Use Eureka service name here (case-insensitive)
+         predicates:
+           - Path=/notification-service/**
+         filters:
+           - StripPrefix=1
 #eureka:
 #  client:
 #    enabled: false  # Temporarily disable for debugging

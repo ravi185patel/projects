@@ -1,7 +1,7 @@
 package com.ncommerce.payment.dao;
 
-import com.ncommerce.payment.constant.PaymentStatus;
-import com.ncommerce.payment.dto.PaymentDto;
+
+import com.ncommerce.common.constant.PaymentStatus;
 import com.ncommerce.payment.entity.PaymentEntity;
 import com.ncommerce.payment.repository.PaymentRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,7 +10,6 @@ import org.springframework.stereotype.Component;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
-import java.util.function.Supplier;
 
 @Component
 public class PaymentDao {
@@ -19,7 +18,7 @@ public class PaymentDao {
     private PaymentRepository paymentRepository;
 
     public PaymentEntity payment(PaymentEntity paymentEntity){
-        paymentEntity.setPaymentStatus(PaymentStatus.SUCCESS);
+        paymentEntity.setPaymentStatus(PaymentStatus.PAYMENT_RECEIVED);
         paymentEntity.setPaymentDate(LocalDate.now());
         return paymentRepository.save(paymentEntity);
     }

@@ -1,6 +1,6 @@
 package com.ncommerce.payment.mapper;
 
-import com.ncommerce.payment.dto.PaymentDto;
+import com.ncommerce.common.dto.PaymentDto;
 import com.ncommerce.payment.entity.PaymentEntity;
 
 import java.util.List;
