@@ -1,8 +1,7 @@
-package com.ncommerce.order.dto;
+package com.ncommerce.common.dto;
 
 
-import com.ncommerce.order.constant.PaymentStatus;
-import jakarta.persistence.Id;
+import com.ncommerce.common.constant.PaymentStatus;
 import lombok.*;
 import org.springframework.stereotype.Component;
 

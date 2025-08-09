@@ -1,4 +1,4 @@
-package com.ncommerce.order.dto;
+package com.ncommerce.common.dto;
 
 import lombok.*;
 import org.springframework.stereotype.Component;
