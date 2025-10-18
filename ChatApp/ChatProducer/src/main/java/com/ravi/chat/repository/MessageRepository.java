@@ -1,0 +1,9 @@
+package com.ravi.chat.repository;
+
+import com.ravi.chat.entity.Message;
+import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.stereotype.Repository;
+
+@Repository
+public interface MessageRepository extends MongoRepository<Message, String> {
+}
