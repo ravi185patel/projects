@@ -7,6 +7,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Table(name = "orders")
 @Data
@@ -16,20 +18,27 @@ import lombok.Setter;
 public class Order {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
+    private String id;
     @Column(nullable = false)
-    private String productId;
-
+    private String userId; // just the ID, not a User object
     @Column(nullable = false)
-    private String userId;
-
+    private String shippingAddressId;
     @Column(nullable = false)
-    private int quantity;
-
+    private String billingAddressId;
     @Column(nullable = false)
-    private double price;
+    private LocalDateTime orderDate;
+    @Column(nullable = false)
+    private String status;
+    @Column(nullable = false)
+    private Double totalAmount;
+    @Column(nullable = false)
+    private String paymentMethod;
+    @Column(nullable = false)
+    private String paymentStatus;
+    @Column(nullable = false)
+    private LocalDateTime createdAt;
+    @Column(nullable = false)
+    private LocalDateTime updatedAt;
 }
 
 

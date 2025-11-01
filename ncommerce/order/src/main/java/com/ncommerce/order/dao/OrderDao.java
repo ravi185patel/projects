@@ -16,7 +16,7 @@ public class OrderDao {
     @Autowired
     private OrderRepository orderRepository;
 
-    public Order getOrder(Long id){
+    public Order getOrder(String id){
         return orderRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Product not found"));
     }

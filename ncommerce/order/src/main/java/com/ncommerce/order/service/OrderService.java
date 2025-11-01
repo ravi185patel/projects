@@ -3,11 +3,15 @@ package com.ncommerce.order.service;
 import com.ncommerce.common.constant.EventType;
 import com.ncommerce.common.constant.OrderStatus;
 import com.ncommerce.common.constant.PaymentStatus;
-import com.ncommerce.common.dto.OrderDto;
 import com.ncommerce.common.dto.OrderEvent;
 import com.ncommerce.common.dto.PaymentDto;
 import com.ncommerce.common.dto.ProductDto;
+import com.ncommerce.common.eventdto.InventoryFailedEvent;
+import com.ncommerce.common.eventdto.InventoryReservedEvent;
+import com.ncommerce.common.eventdto.OrderCreatedEvent;
+import com.ncommerce.common.eventdto.PaymentFailedEvent;
 import com.ncommerce.order.dao.OrderDao;
+import com.ncommerce.order.dto.OrderDto;
 import com.ncommerce.order.entity.Order;
 import com.ncommerce.order.mapper.OrderMapper;
 import jakarta.transaction.Transactional;
@@ -18,6 +22,7 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -37,13 +42,13 @@ public class OrderService {
     @Value("${kafka.topic.name}")
     private String topicName;
 
-    public OrderDto getOrder(Long id){
-        return OrderMapper.entityToDto(orderDao.getOrder(id));
+    public OrderDto getOrder(String id){
+        return OrderMapper.INSTANCE.toDTO(orderDao.getOrder(id));
     }
 
     @Transactional(value = Transactional.TxType.REQUIRED)
-    public OrderDto placeOrder(OrderDto orderDto){
-        String urlCheck = "http://product-service/api/product/" + orderDto.getProductId();
+    public OrderDto placeOrder(OrderDto orderDto){ // called Orchestration-based Saga (central Saga orchestrator) Example  where order work as coordinates the workflow.
+        /*String urlCheck = "http://product-service/api/product/" + orderDto.getProductId();
         ResponseEntity<ProductDto> responseEntity =
                 restTemplate.exchange(
                         urlCheck,
@@ -96,7 +101,7 @@ public class OrderService {
         }
 
         urlCheck = "http://product-service/api/product";
-        productDto.setStock(productDto.getStock()-order.getQuantity());
+        productDto.setStock(0);
         HttpEntity<ProductDto> request = new HttpEntity<>(productDto);
         ResponseEntity<ProductDto> response =null;
         try {
@@ -120,8 +125,70 @@ public class OrderService {
         orderEvent.setStatus(OrderStatus.CONFIRMED);
         orderEvent.setEventId(order.getId());
         kafkaTemplate.send(topicName,orderEvent);
+        return orderDto;*/
+        return null;
+    }
+    public OrderDto placeOrderEvent(OrderDto orderDto){
+        orderDto.setStatus("PENDING");
+        Order order = OrderMapper.INSTANCE.toEntity(orderDto);
+        orderDto = OrderMapper.INSTANCE.toDTO(orderDao.placeOrder(order));
+        kafkaTemplate.send("orders-topic",new OrderCreatedEvent(String.valueOf(order.getId()),String.valueOf(order.getUserId()),(double)order.getTotalAmount()));
         return orderDto;
     }
 
+    @KafkaListener(topics = "inventory-reserved", groupId = "order-service")
+    public void handleInventoryReserved(InventoryReservedEvent event) {
+        Order order = orderDao.getOrder(event.getOrderId());
+        order.setStatus("COMPLETED");
+        orderDao.placeOrder(order);
+    }
+
+    @KafkaListener(topics = {"payment-failed", "inventory-failed"}, groupId = "order-service")
+    public void handleFailures(Object event) {
+        String orderId = null;
+        if (event instanceof PaymentFailedEvent e) orderId = e.getOrderId();
+        if (event instanceof InventoryFailedEvent e) orderId = e.getOrderId();
+        Order order = orderDao.getOrder(orderId);
+        order.setStatus("CANCELLED");
+        orderDao.placeOrder(order);
+    }
+//
+//
+//    @Service
+//    public class OrderService {
+//
+//        private final OrderRepository repo;
+//        private final KafkaTemplate<String, Object> kafkaTemplate;
+//
+//        public OrderService(OrderRepository repo, KafkaTemplate<String, Object> kafkaTemplate) {
+//            this.repo = repo;
+//            this.kafkaTemplate = kafkaTemplate;
+//        }
+//
+//        public Order createOrder(Order order) {
+//            order.setId(UUID.randomUUID().toString());
+//            order.setStatus("PENDING");
+//            Order saved = repo.save(order);
+//            kafkaTemplate.send("order-created", new OrderCreatedEvent(saved.getId(), saved.getUserId(), saved.getAmount()));
+//            return saved;
+//        }
+//
+//        @KafkaListener(topics = "inventory-reserved", groupId = "order-service")
+//        public void handleInventoryReserved(InventoryReservedEvent event) {
+//            Order order = repo.findById(event.getOrderId()).orElseThrow();
+//            order.setStatus("COMPLETED");
+//            repo.save(order);
+//        }
+//
+//        @KafkaListener(topics = {"payment-failed", "inventory-failed"}, groupId = "order-service")
+//        public void handleFailures(Object event) {
+//            String orderId = null;
+//            if (event instanceof PaymentFailedEvent e) orderId = e.getOrderId();
+//            if (event instanceof InventoryFailedEvent e) orderId = e.getOrderId();
+//            Order order = repo.findById(orderId).orElseThrow();
+//            order.setStatus("CANCELLED");
+//            repo.save(order);
+//        }
+//    }
 
 }
