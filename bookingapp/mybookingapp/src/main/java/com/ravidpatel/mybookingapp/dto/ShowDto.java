@@ -1,16 +1,28 @@
-package com.ravidpatel.mybookingapp.entity;
+package com.ravidpatel.mybookingapp.dto;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 
-public class Show {
+public class ShowDto {
     private String showId;
     private String movieId;
     private String screenId;
     private LocalDate showDate;
     private LocalTime fromTime;
-    private LocalTime  toTime;
+    private LocalTime toTime;
+
+    public ShowDto() {
+    }
+
+    public ShowDto(String showId, String movieId, String screenId, LocalDate showDate, LocalTime fromTime, LocalTime toTime) {
+        this.showId = showId;
+        this.movieId = movieId;
+        this.screenId = screenId;
+        this.showDate = showDate;
+        this.fromTime = fromTime;
+        this.toTime = toTime;
+    }
 
     public String getShowId() {
         return showId;
