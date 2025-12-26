@@ -17,7 +17,7 @@ public class MovieController {
     @Autowired
     private MovieService movieService;
 
-    @GetMapping("/")
+    @GetMapping("/{movie_name}")
     public List<MovieDto> getAllMovie(@PathVariable("movie_name") String movieName){
         return movieService.getAllMovie(new MovieDto(null,movieName));
     }
