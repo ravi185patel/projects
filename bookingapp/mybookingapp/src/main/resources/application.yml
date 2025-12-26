@@ -1,0 +1,14 @@
+
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/mybookingapp
+    username: user
+    password: user
+    driver-class-name: org.postgresql.Driver
+
+  jdbc:
+    template:
+      fetch-size: 100
+
+  application:
+    name: mybookingapp
