@@ -1,6 +1,6 @@
-package com.ravidpatel.mybookingapp.entity;
+package com.ravidpatel.mybookingapp.dto;
 
-public class Seat {
+public class SeatDto {
   private String seatId;
   private String screenId;
   private String seatNo;
