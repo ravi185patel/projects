@@ -1,9 +1,9 @@
 
 spring:
   datasource:
-    url: jdbc:postgresql://host.docker.internal:5432/mybookingapp
-    username: user
-    password: user
+    url: jdbc:postgresql://localhost:5432/development_database
+    username: postgres
+    password: postgres
     driver-class-name: org.postgresql.Driver
 
   jdbc:
