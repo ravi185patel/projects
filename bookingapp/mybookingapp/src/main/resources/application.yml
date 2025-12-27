@@ -1,14 +1,37 @@
+# # run in docker for single db
+#spring:
+#  datasource:
+#    master:
+#      url: jdbc:postgresql://host.docker.internal:5432/mybookingapp
+#    slave:
+#      url: jdbc:postgresql://host.docker.internal:5433/mybookingapp
+#    username: user
+#    password: user
+#    driver-class-name: org.postgresql.Driver
+#
+#  jdbc:
+#    template:
+#      fetch-size: 100
+#
+#  application:
+#    name: mybookingapp
+
 
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/mybookingapp
-    username: user
-    password: user
-    driver-class-name: org.postgresql.Driver
+    master:
+      jdbc-url: jdbc:postgresql://host.docker.internal:5432/development_database
+      username: postgres
+      password: postgres
+      driver-class-name: org.postgresql.Driver
 
-  jdbc:
-    template:
-      fetch-size: 100
-
+    slave:
+      jdbc-url: jdbc:postgresql://host.docker.internal:5433/development_database
+      username: postgres
+      password: postgres
+      driver-class-name: org.postgresql.Driver
   application:
     name: mybookingapp
+
+server:
+  port: 9090
