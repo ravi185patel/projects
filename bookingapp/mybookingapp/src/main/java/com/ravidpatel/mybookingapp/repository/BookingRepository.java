@@ -1,5 +1,6 @@
 package com.ravidpatel.mybookingapp.repository;
 
+import com.ravidpatel.mybookingapp.config.DbContextHolder;
 import com.ravidpatel.mybookingapp.constant.BookingStatus;
 import com.ravidpatel.mybookingapp.dto.BookingRequestDto;
 import com.ravidpatel.mybookingapp.entity.Booking;
@@ -43,14 +44,18 @@ public class BookingRepository{
         return bookSeats(bookingRequestDto);
     }
 
+    @Transactional(readOnly = true)
     public void validateSelectedSeats(BookingRequestDto bookingRequestDto){
+        DbContextHolder.useSlave();
         Map<String, Object> params = new HashMap<>();
         params.put("SHOW_ID",bookingRequestDto.getShowId());
         params.put("SEAT_ID",bookingRequestDto.getSeatId());
         int noOfSeatsOccupied = namedParameterJdbcTemplate.queryForObject(validateSeats, params,Integer.class);
         if(noOfSeatsOccupied == 0){
             System.out.println("All seat are free to book...!");
+            DbContextHolder.clear();
         }else{
+            DbContextHolder.clear();
             throw new SeatException(" Few of selected seats got occupied..! ");
         }
         try {
@@ -62,6 +67,7 @@ public class BookingRepository{
 
     @Transactional
     public String bookSeats(BookingRequestDto bookingRequestDto){
+        DbContextHolder.useMaster();
         Booking booking = convertIntoEntity(bookingRequestDto);
         Map<String,Object> params = new HashMap<>();
         params.put("booking_id", booking.getBookingId());
@@ -74,6 +80,7 @@ public class BookingRepository{
         if (success > 0) {
             System.out.println("successfully booking done...!");
         } else {
+            DbContextHolder.clear();
             throw new RuntimeException(" Problem with booking...!");
         }
         List<Map<String, Object>> listParams = bookingRequestDto.getSeatId().stream()
@@ -96,6 +103,8 @@ public class BookingRepository{
             }
         }catch (DuplicateKeyException ex) {
             throw new SeatAlreadyBookedException("Seat already booked");
+        }finally {
+            DbContextHolder.clear();
         }
 
 

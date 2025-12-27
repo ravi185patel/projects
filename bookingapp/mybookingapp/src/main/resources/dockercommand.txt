@@ -1,0 +1,10 @@
+docker compose up -d
+docker compose down -v
+
+docker build -t mybookingapp .
+
+docker run -d --name mybookingapp-1 -p 9090:9090 mybookingapp
+docker run -d --name mybookingapp-2 -p 9091:9090 mybookingapp
+docker run -d --name mybookingapp-3 -p 9092:9090 mybookingapp
+
+
