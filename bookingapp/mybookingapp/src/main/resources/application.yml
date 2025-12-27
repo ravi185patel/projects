@@ -20,13 +20,18 @@
 spring:
   datasource:
     master:
-      jdbc-url: jdbc:postgresql://localhost:5432/development_database
+      jdbc-url: jdbc:postgresql://host.docker.internal:5432/development_database
       username: postgres
       password: postgres
       driver-class-name: org.postgresql.Driver
 
     slave:
-      jdbc-url: jdbc:postgresql://localhost:5433/development_database
+      jdbc-url: jdbc:postgresql://host.docker.internal:5433/development_database
       username: postgres
       password: postgres
       driver-class-name: org.postgresql.Driver
+  application:
+    name: mybookingapp
+
+server:
+  port: 9090

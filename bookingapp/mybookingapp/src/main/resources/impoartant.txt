@@ -1,0 +1,7 @@
+**** very important point ***********
+1️⃣ One Git repo contains all apps (chat, booking, mcommerce).
+2️⃣ Each app lives in its own folder; code is written only once.
+3️⃣ Versions are handled by Git branches, not by copying folders.
+4️⃣ A branch changes only the relevant app folder; others remain untouched.
+5️⃣ Git stores only differences, so there is no duplicate code
+

@@ -12,3 +12,6 @@ spring:
 
   application:
     name: mybookingapp
+
+server:
+  port: 9090
