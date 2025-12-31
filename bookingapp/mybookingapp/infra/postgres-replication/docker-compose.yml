@@ -1,42 +1,71 @@
-version: "3"
-services:
-  postgresql-master:
-    image: bitnami/postgresql
-    restart: always
-    ports:
-      - '5432:5432'
-    volumes:
-      - postgresql_master_data:/bitnami/postgresql
-      - ./db.sql:/docker-entrypoint-initdb.d/db.sql
-    environment:
-      - POSTGRESQL_PGAUDIT_LOG=READ,WRITE
-      - POSTGRESQL_LOG_HOSTNAME=true
-      - POSTGRESQL_REPLICATION_MODE=master
-      - POSTGRESQL_REPLICATION_USER=repl_user
-      - POSTGRESQL_REPLICATION_PASSWORD=repl_user
-      - POSTGRESQL_USERNAME=postgres
-      - POSTGRESQL_PASSWORD=postgres
-      - POSTGRESQL_DATABASE=development_database
-      - ALLOW_EMPTY_PASSWORD=yes
+#version: "3.9"
 
-  postgresql-slave:
-    image: bitnami/postgresql
-    restart: always
-    ports:
-      - '5433:5432'
-    depends_on:
-      - postgresql-master
+services:
+  patroni1:
+    image: ongres/patroni:latest
+    container_name: patroni1
     environment:
-      - POSTGRESQL_PASSWORD=postgres
-      - POSTGRESQL_MASTER_HOST=postgresql-master
-      - POSTGRESQL_PGAUDIT_LOG=READ
-      - POSTGRESQL_LOG_HOSTNAME=true
-      - POSTGRESQL_REPLICATION_MODE=slave
-      - POSTGRESQL_REPLICATION_USER=repl_user
-      - POSTGRESQL_REPLICATION_PASSWORD=repl_user
-      - POSTGRESQL_MASTER_PORT_NUMBER=5432
-      - ALLOW_EMPTY_PASSWORD=yes
+      PATRONI_NAME: patroni1
+      PATRONI_SCOPE: booking-cluster
+
+      PATRONI_RESTAPI_LISTEN: 0.0.0.0:8008
+      PATRONI_RESTAPI_CONNECT_ADDRESS: patroni1:8008
+
+      PATRONI_POSTGRESQL_LISTEN: 0.0.0.0:5432
+      PATRONI_POSTGRESQL_CONNECT_ADDRESS: patroni1:5432
+
+      PATRONI_POSTGRESQL_DATABASE: mybookingapp_m
+      PATRONI_SUPERUSER_USERNAME: postgres
+      PATRONI_SUPERUSER_PASSWORD: postgres
+      PATRONI_REPLICATION_USERNAME: repl
+      PATRONI_REPLICATION_PASSWORD: repl
+
+      # Embedded DCS (no external etcd)
+      PATRONI_DCS: '{"ttl":30,"loop_wait":10,"retry_timeout":10}'
+    volumes:
+      - patroni1-data:/var/lib/postgresql/data
+#    ports:
+#      - "5432:5432"
+#      - "8008:8008"
+
+  patroni2:
+    image: ongres/patroni:latest
+    container_name: patroni2
+    environment:
+      PATRONI_NAME: patroni2
+      PATRONI_SCOPE: booking-cluster
+
+      PATRONI_RESTAPI_LISTEN: 0.0.0.0:8008
+      PATRONI_RESTAPI_CONNECT_ADDRESS: patroni2:8008
+
+      PATRONI_POSTGRESQL_LISTEN: 0.0.0.0:5432
+      PATRONI_POSTGRESQL_CONNECT_ADDRESS: patroni2:5432
+
+      PATRONI_POSTGRESQL_DATABASE: mybookingapp_m
+      PATRONI_SUPERUSER_USERNAME: postgres
+      PATRONI_SUPERUSER_PASSWORD: postgres
+      PATRONI_REPLICATION_USERNAME: repl
+      PATRONI_REPLICATION_PASSWORD: repl
+
+      PATRONI_DCS: '{"ttl":30,"loop_wait":10,"retry_timeout":10}'
+    volumes:
+      - patroni2-data:/var/lib/postgresql/data
+#    ports:
+#      - "5433:5433"
+#      - "8009:8008"
+
+  haproxy:
+    image: haproxy:2.9
+    container_name: haproxy
+    depends_on:
+      - patroni1
+      - patroni2
+    volumes:
+      - ./haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg
+    ports:
+      - "5432:5432"   # WRITE
+      - "5433:5433"   # READ
 
 volumes:
-  postgresql_master_data:
-    driver: local
+  patroni1-data:
+  patroni2-data:
