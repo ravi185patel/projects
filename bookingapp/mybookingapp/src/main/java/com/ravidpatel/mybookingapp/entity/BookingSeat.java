@@ -2,6 +2,7 @@ package com.ravidpatel.mybookingapp.entity;
 
 public class BookingSeat {
     private String bookingId;
+    private String scheduleId;
     private String seatId;
 
     public String getBookingId() {
@@ -10,6 +11,14 @@ public class BookingSeat {
 
     public void setBookingId(String bookingId) {
         this.bookingId = bookingId;
+    }
+
+    public String getScheduleId() {
+        return scheduleId;
+    }
+
+    public void setScheduleId(String scheduleId) {
+        this.scheduleId = scheduleId;
     }
 
     public String getSeatId() {

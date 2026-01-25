@@ -1,25 +1,34 @@
 package com.ravidpatel.mybookingapp.dto;
 
 public class SeatDto {
-  private String seatId;
-  private String screenId;
-  private String seatNo;
-  private String seatType; // enum
+ private Long seatId;
+ private Long spaceId;
+ private String rowLabel;
+ private String seatNo;
+ private String seatType; // enum
 
- public String getSeatId() {
+ public Long getSeatId() {
   return seatId;
  }
 
- public void setSeatId(String seatId) {
+ public void setSeatId(Long seatId) {
   this.seatId = seatId;
  }
 
- public String getScreenId() {
-  return screenId;
+ public Long getSpaceId() {
+  return spaceId;
  }
 
- public void setScreenId(String screenId) {
-  this.screenId = screenId;
+ public void setSpaceId(Long spaceId) {
+  this.spaceId = spaceId;
+ }
+
+ public String getRowLabel() {
+  return rowLabel;
+ }
+
+ public void setRowLabel(String rowLabel) {
+  this.rowLabel = rowLabel;
  }
 
  public String getSeatNo() {

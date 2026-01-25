@@ -1,8 +1,5 @@
 package com.ravidpatel.mybookingapp.mapper;
 
-import com.ravidpatel.mybookingapp.entity.Show;
-import com.ravidpatel.mybookingapp.entity.Theater;
-
 import java.util.List;
 
 public class TheaterMapper {

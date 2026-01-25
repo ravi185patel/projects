@@ -1,10 +1,12 @@
 package com.ravidpatel.mybookingapp.controller;
 
 import com.ravidpatel.mybookingapp.dto.BookingRequestDto;
+import com.ravidpatel.mybookingapp.dto.BookingResponseDto;
 import com.ravidpatel.mybookingapp.dto.RequestDto;
 import com.ravidpatel.mybookingapp.dto.ResponseDto;
 import com.ravidpatel.mybookingapp.service.BookingService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -12,24 +14,23 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("mybookingapp")
 public class BookingController {
 
-    @Autowired
     private BookingService bookingService;
 
-    @GetMapping("/show/{showId}")
-    private String getShows(@PathVariable String showId){
-        return bookingService.getShows(showId);
+    @Autowired
+    public BookingController(BookingService bookingService){
+        this.bookingService = bookingService;
     }
 
     @PostMapping("/book/show")
-    private ResponseEntity createBooking(@RequestBody RequestDto<BookingRequestDto> bookingRequestDto){
-        String bookingId = bookingService.createBooking(bookingRequestDto.getData());
-        ResponseDto<String> responseDto = new ResponseDto<String>(bookingId,"successs");
-        return ResponseEntity.ok(responseDto);
+    private ResponseEntity<BookingResponseDto> createBooking(@RequestBody BookingRequestDto request,
+                                                             @RequestHeader("X-USER-ID") String userId) {
+        BookingResponseDto response =bookingService.createBooking(request, userId);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    @GetMapping("/book/show/{bookId}")
-    private String getShowBooking(@PathVariable String bookId){
-        return bookingService.getShowBooking(bookId);
+    @GetMapping("/{bookingId}")
+    public ResponseEntity<BookingResponseDto> getBooking(@PathVariable String bookingId) {
+        return ResponseEntity.ok(bookingService.getBookingById(bookingId));
     }
 
 }

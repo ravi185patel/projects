@@ -1,56 +1,38 @@
 package com.ravidpatel.mybookingapp.repository;
 
 import com.ravidpatel.mybookingapp.config.DbContextHolder;
+import com.ravidpatel.mybookingapp.constant.BookingSql;
 import com.ravidpatel.mybookingapp.constant.BookingStatus;
 import com.ravidpatel.mybookingapp.dto.BookingRequestDto;
 import com.ravidpatel.mybookingapp.entity.Booking;
+import com.ravidpatel.mybookingapp.entity.BookingSeat;
 import com.ravidpatel.mybookingapp.exceptions.SeatAlreadyBookedException;
 import com.ravidpatel.mybookingapp.exceptions.SeatException;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DuplicateKeyException;
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 @Repository
 public class BookingRepository{
 
-    @Autowired
-    private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
-    private String bookingQuery = """
-            INSERT INTO booking (booking_id,show_id,consumer_id,booking_date,booking_status)
-            VALUES (:booking_id,:show_id,:consumer_id,:booking_date,:booking_status)
-        """;
-    private String validateSeats = """
-                SELECT count(seat_id) SEATS FROM BOOKING B
-                    INNER JOIN BOOKING_SEAT BS ON ( B.BOOKING_ID = BS.BOOKING_ID)
-                    WHERE B.SHOW_ID = :SHOW_ID
-                    AND BS.SEAT_ID IN( :SEAT_ID)
-            """;
-    private String seatQuery = """
-            INSERT INTO booking_seat (booking_id,seat_id,show_id)
-            VALUES (:booking_id,:seat_id,:show_id)
-        """;
+    private final NamedParameterJdbcTemplate namedParameterJdbcTemplate;
 
-//    @Transactional
-    public String createBooking(BookingRequestDto bookingRequestDto) {
-        validateSelectedSeats(bookingRequestDto);
-        return bookSeats(bookingRequestDto);
+    public BookingRepository(NamedParameterJdbcTemplate namedParameterJdbcTemplate) {
+        this.namedParameterJdbcTemplate = namedParameterJdbcTemplate;
     }
 
-    @Transactional(readOnly = true)
-    public void validateSelectedSeats(BookingRequestDto bookingRequestDto){
+    public void validateSelectedSeats(BookingRequestDto bookingRequestDto){ // create race condition
         DbContextHolder.useSlave();
         Map<String, Object> params = new HashMap<>();
-        params.put("SHOW_ID",bookingRequestDto.getShowId());
-        params.put("SEAT_ID",bookingRequestDto.getSeatId());
-        int noOfSeatsOccupied = namedParameterJdbcTemplate.queryForObject(validateSeats, params,Integer.class);
+        params.put("SCHEDULE_ID",bookingRequestDto.getScheduleId());
+        params.put("SEAT_ID",bookingRequestDto.getSeatIds());
+        int noOfSeatsOccupied = namedParameterJdbcTemplate.queryForObject(BookingSql.VALIDATE_SEAT_BY_SEAT_AND_SHOW_ID, params,Integer.class);
         if(noOfSeatsOccupied == 0){
             System.out.println("All seat are free to book...!");
             DbContextHolder.clear();
@@ -65,37 +47,38 @@ public class BookingRepository{
         }
     }
 
-    @Transactional
-    public String bookSeats(BookingRequestDto bookingRequestDto){
+    public void insertBooking(Booking booking){
         DbContextHolder.useMaster();
-        Booking booking = convertIntoEntity(bookingRequestDto);
         Map<String,Object> params = new HashMap<>();
         params.put("booking_id", booking.getBookingId());
-        params.put("show_id", booking.getShowId());
+        params.put("show_id", booking.getScheduleId());
         params.put("consumer_id", booking.getUserId());
         params.put("booking_date", LocalDateTime.now());
-        params.put("booking_status", BookingStatus.CONFIRMED.getName());
+        params.put("booking_status", BookingStatus.CONFIRMED);
 
-        int success = namedParameterJdbcTemplate.update(bookingQuery, params);
+        int success = namedParameterJdbcTemplate.update(BookingSql.INSERT_BOOKING, params);
         if (success > 0) {
             System.out.println("successfully booking done...!");
         } else {
             DbContextHolder.clear();
             throw new RuntimeException(" Problem with booking...!");
         }
-        List<Map<String, Object>> listParams = bookingRequestDto.getSeatId().stream()
-                .map(seatId -> {
+    }
+
+    public void insertBookingSeat(List<BookingSeat> bookingSeats){
+        List<Map<String, Object>> listParams = bookingSeats.stream()
+                .map(bookingSeat -> {
                     Map<String, Object> map = new HashMap<>();
-                    map.put("booking_id", booking.getBookingId());
-                    map.put("show_id", booking.getShowId());
-                    map.put("seat_id", seatId);
+                    map.put("booking_id", bookingSeat.getBookingId());
+                    map.put("scheduled_id", bookingSeat.getScheduleId());
+                    map.put("seat_id", bookingSeat.getSeatId());
                     return map;
                 })
                 .toList();
 
         // payment
         try {
-            int[] successList = namedParameterJdbcTemplate.batchUpdate(seatQuery, listParams.toArray(new Map[0]));
+            int[] successList = namedParameterJdbcTemplate.batchUpdate(BookingSql.INSERT_BOOKING_SEAT, listParams.toArray(new Map[0]));
             if(successList.length > 0){
                 System.out.println("successfully seat reserved...!");
             }else{
@@ -106,18 +89,45 @@ public class BookingRepository{
         }finally {
             DbContextHolder.clear();
         }
+    }
 
 
-        // payment process
-        return booking.getBookingId();
+    public Booking getBookingById(String bookingId){
+        Map<String, Object> params = Map.of("booking_id", bookingId);
+        return namedParameterJdbcTemplate.queryForObject(
+                BookingSql.FIND_BOOKING_BY_ID,
+                params,
+                BOOKING_ROW_MAPPER
+        );
     }
-    public Booking convertIntoEntity(BookingRequestDto bookingRequestDto){
-        Booking booking = new Booking();
-        booking.setBookingId(UUID.randomUUID().toString());
-        booking.setUserId(bookingRequestDto.getUserId());
-        booking.setShowId(bookingRequestDto.getShowId());
-        booking.setBookingDateTime(bookingRequestDto.getBookingDateTime());
-        booking.setBookingStatus(bookingRequestDto.getBookingStatus());
-        return booking;
+
+    public List<String> getSeatIdsByBookingId(String bookingId) {
+
+        String sql = """
+            SELECT seat_id
+            FROM booking_seat
+            WHERE booking_id = :bookingId
+        """;
+
+        return namedParameterJdbcTemplate.queryForList(
+                sql,
+                Map.of("bookingId", bookingId),
+                String.class
+        );
     }
+
+    private static final RowMapper<Booking> BOOKING_ROW_MAPPER =
+            (rs, rowNum) -> {
+                Booking booking = new Booking();
+                booking.setBookingId(rs.getString("booking_id"));
+                booking.setScheduleId(rs.getString("schedule_id"));
+                booking.setUserId(rs.getString("user_id"));
+                booking.setStatus(
+                        BookingStatus.valueOf(rs.getString("status"))
+                );
+                booking.setCreatedAt(
+                        rs.getTimestamp("created_at").toLocalDateTime()
+                );
+                return booking;
+            };
 }

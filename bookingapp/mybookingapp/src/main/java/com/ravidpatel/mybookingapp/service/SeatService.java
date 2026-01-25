@@ -1,8 +1,6 @@
 package com.ravidpatel.mybookingapp.service;
 
-import com.ravidpatel.mybookingapp.dto.SeatDto;
 import com.ravidpatel.mybookingapp.entity.Seat;
-import com.ravidpatel.mybookingapp.repository.SeatRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

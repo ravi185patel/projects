@@ -1,8 +1,5 @@
 package com.ravidpatel.mybookingapp.mapper;
 
-import com.ravidpatel.mybookingapp.entity.Movie;
-import com.ravidpatel.mybookingapp.entity.Show;
-
 import java.util.List;
 
 public class ShowMapper {

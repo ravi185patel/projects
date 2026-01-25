@@ -4,10 +4,10 @@ import com.ravidpatel.mybookingapp.constant.BookingStatus;
 import java.time.LocalDateTime;
 public class Booking {
     private String bookingId;
-    private String showId;
+    private String scheduleId;
     private String userId;
-    private BookingStatus bookingStatus;
-    private LocalDateTime bookingDateTime;
+    private BookingStatus status;
+    private LocalDateTime createdAt;
 
     public String getBookingId() {
         return bookingId;
@@ -17,12 +17,12 @@ public class Booking {
         this.bookingId = bookingId;
     }
 
-    public String getShowId() {
-        return showId;
+    public String getScheduleId() {
+        return scheduleId;
     }
 
-    public void setShowId(String showId) {
-        this.showId = showId;
+    public void setScheduleId(String scheduleId) {
+        this.scheduleId = scheduleId;
     }
 
     public String getUserId() {
@@ -33,19 +33,19 @@ public class Booking {
         this.userId = userId;
     }
 
-    public BookingStatus getBookingStatus() {
-        return bookingStatus;
+    public BookingStatus getStatus() {
+        return status;
     }
 
-    public void setBookingStatus(BookingStatus bookingStatus) {
-        this.bookingStatus = bookingStatus;
+    public void setStatus(BookingStatus status) {
+        this.status = status;
     }
 
-    public LocalDateTime getBookingDateTime() {
-        return bookingDateTime;
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
     }
 
-    public void setBookingDateTime(LocalDateTime bookingDateTime) {
-        this.bookingDateTime = bookingDateTime;
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
     }
 }

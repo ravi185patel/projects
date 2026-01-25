@@ -1,14 +1,12 @@
 package com.ravidpatel.mybookingapp.dto;
 
 import com.ravidpatel.mybookingapp.constant.BookingStatus;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
-public class BookingRequestDto {
+public class BookingResponseDto {
+
     private String bookingId;
     private String scheduleId;
     private List<String> seatIds;

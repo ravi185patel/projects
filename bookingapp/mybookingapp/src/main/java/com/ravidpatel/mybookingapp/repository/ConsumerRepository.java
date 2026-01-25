@@ -1,14 +1,12 @@
 package com.ravidpatel.mybookingapp.repository;
 
 import com.ravidpatel.mybookingapp.entity.Consumer;
-import com.ravidpatel.mybookingapp.entity.Movie;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 
 @Repository
 public class ConsumerRepository {
