@@ -190,3 +190,258 @@ commit;
 -- rollback;
 ****/
 
+/* =========================================================
+   MyBookingApp - Database Schema
+   Supports Movies + Events + Multi-seat Booking
+   Compatible: PostgreSQL / MySQL
+   ========================================================= */
+
+
+/* =========================================================
+   VENUE SERVICE TABLES
+   ========================================================= */
+
+-- 1. VENUE
+CREATE TABLE venue (
+    venue_id      BIGSERIAL PRIMARY KEY,
+    venue_name    VARCHAR(200) NOT NULL,
+    venue_city    VARCHAR(100) NOT NULL,
+    venue_type    VARCHAR(50)  NOT NULL
+);
+
+-- 2. CONTENT (Movie / Event)
+CREATE TABLE content (
+    content_id        BIGSERIAL PRIMARY KEY,
+    content_type      VARCHAR(50)  NOT NULL,   -- MOVIE, CONCERT, SPORTS
+    title             VARCHAR(200) NOT NULL,
+    language          VARCHAR(50),
+    duration_minutes  INT
+);
+
+-- 3. SPACE (Screen / Stage / Ground)
+CREATE TABLE space (
+    space_id     BIGSERIAL PRIMARY KEY,
+    venue_id     BIGINT NOT NULL,
+    space_name   VARCHAR(100) NOT NULL,
+    capacity     INT NOT NULL,
+
+    CONSTRAINT fk_space_venue
+        FOREIGN KEY (venue_id)
+        REFERENCES venue (venue_id)
+);
+
+-- 4. SEAT (Seat Layout Only)
+CREATE TABLE seat (
+    seat_id     BIGSERIAL PRIMARY KEY,
+    space_id    BIGINT NOT NULL,
+    row_label   VARCHAR(10) NOT NULL,
+    seat_no     VARCHAR(10) NOT NULL,
+    seat_type   VARCHAR(50),
+
+    CONSTRAINT fk_seat_space
+        FOREIGN KEY (space_id)
+        REFERENCES space (space_id),
+
+    CONSTRAINT uk_space_seat
+        UNIQUE (space_id, seat_no)
+);
+
+-- 5. SCHEDULE (Show / Event Slot)
+CREATE TABLE schedule (
+    schedule_id    BIGSERIAL PRIMARY KEY,
+    content_id     BIGINT NOT NULL,
+    space_id       BIGINT NOT NULL,
+    schedule_date  DATE NOT NULL,
+    from_time      TIME NOT NULL,
+    to_time        TIME NOT NULL,
+    base_price     DECIMAL(10,2) NOT NULL,
+
+    CONSTRAINT fk_schedule_content
+        FOREIGN KEY (content_id)
+        REFERENCES content (content_id),
+
+    CONSTRAINT fk_schedule_space
+        FOREIGN KEY (space_id)
+        REFERENCES space (space_id)
+);
+
+
+/* =========================================================
+   BOOKING SERVICE TABLES
+   ========================================================= */
+
+-- 6. BOOKING
+CREATE TABLE booking (
+    booking_id    VARCHAR(50) PRIMARY KEY,
+    schedule_id   BIGINT NOT NULL,   -- logical reference (no FK)
+    user_id       VARCHAR(50) NOT NULL,
+    status        VARCHAR(30) NOT NULL,  -- CREATED, CONFIRMED, CANCELLED
+    created_at    TIMESTAMP   NOT NULL
+);
+
+-- 7. BOOKING_SEAT (Multi-seat mapping)
+CREATE TABLE booking_seat (
+    booking_id   VARCHAR(50) NOT NULL,
+    schedule_id  BIGINT NOT NULL,
+    seat_id      BIGINT NOT NULL,
+
+    PRIMARY KEY (booking_id, seat_id)
+);
+
+-- CRITICAL CONCURRENCY CONSTRAINT
+-- Prevents double booking of same seat for same schedule
+CREATE UNIQUE INDEX uk_schedule_seat
+ON booking_seat (schedule_id, seat_id);
+
+
+/* =========================================================
+   OPTIONAL PERFORMANCE INDEXES
+   ========================================================= */
+
+-- Fast schedule lookup
+CREATE INDEX idx_schedule_date
+ON schedule (schedule_date);
+
+-- Fast booking lookup
+CREATE INDEX idx_booking_user
+ON booking (user_id);
+
+-- Fast seat lookup by space
+CREATE INDEX idx_seat_space
+ON seat (space_id);
+
+
+/* =========================================================
+   END OF SCHEMA
+   ========================================================= */
+
+
+/* =========================================================
+   MyBookingApp - Seed Data (PostgreSQL)
+   ========================================================= */
+
+
+/* =========================================================
+   VENUE
+   ========================================================= */
+
+INSERT INTO venue (venue_name, venue_city, venue_type)
+VALUES
+('PVR Phoenix Mall', 'Bangalore', 'THEATER'),
+('INOX Forum Mall', 'Bangalore', 'THEATER'),
+('DY Patil Stadium', 'Mumbai', 'STADIUM');
+
+
+/* =========================================================
+   CONTENT (Movie / Event)
+   ========================================================= */
+
+INSERT INTO content (content_type, title, language, duration_minutes)
+VALUES
+('MOVIE', 'Inception', 'EN', 148),
+('MOVIE', 'Interstellar', 'EN', 169),
+('CONCERT', 'Arijit Singh Live', 'HI', 180);
+
+
+/* =========================================================
+   SPACE (Screen / Stage)
+   ========================================================= */
+
+-- PVR Phoenix Mall (venue_id assumed by order: 1)
+INSERT INTO space (venue_id, space_name, capacity)
+VALUES
+(1, 'Screen 1', 200),
+(1, 'Screen 2', 180);
+
+-- INOX Forum Mall (venue_id: 2)
+INSERT INTO space (venue_id, space_name, capacity)
+VALUES
+(2, 'Screen A', 220);
+
+-- DY Patil Stadium (venue_id: 3)
+INSERT INTO space (venue_id, space_name, capacity)
+VALUES
+(3, 'Main Stage', 50000);
+
+
+/* =========================================================
+   SEAT (Layout Only)
+   ========================================================= */
+
+-- Screen 1 (space_id: 1)
+INSERT INTO seat (space_id, row_label, seat_no, seat_type)
+VALUES
+(1, 'A', 'A1', 'REGULAR'),
+(1, 'A', 'A2', 'REGULAR'),
+(1, 'A', 'A3', 'REGULAR'),
+(1, 'B', 'B1', 'PREMIUM'),
+(1, 'B', 'B2', 'PREMIUM');
+
+-- Screen 2 (space_id: 2)
+INSERT INTO seat (space_id, row_label, seat_no, seat_type)
+VALUES
+(2, 'A', 'A1', 'REGULAR'),
+(2, 'A', 'A2', 'REGULAR');
+
+-- Screen A (space_id: 3)
+INSERT INTO seat (space_id, row_label, seat_no, seat_type)
+VALUES
+(3, 'A', 'A1', 'REGULAR'),
+(3, 'A', 'A2', 'REGULAR');
+
+
+/* =========================================================
+   SCHEDULE (Show / Event Slot)
+   ========================================================= */
+
+-- Inception in PVR Screen 1
+INSERT INTO schedule
+(content_id, space_id, schedule_date, from_time, to_time, base_price)
+VALUES
+(1, 1, '2026-02-01', '18:30', '21:00', 250.00);
+
+-- Interstellar in INOX Screen A
+INSERT INTO schedule
+(content_id, space_id, schedule_date, from_time, to_time, base_price)
+VALUES
+(2, 3, '2026-02-01', '19:00', '22:00', 300.00);
+
+-- Arijit Singh Concert at DY Patil Stadium
+INSERT INTO schedule
+(content_id, space_id, schedule_date, from_time, to_time, base_price)
+VALUES
+(3, 4, '2026-02-10', '19:00', '22:30', 1500.00);
+
+
+/* =========================================================
+   BOOKING
+   ========================================================= */
+
+-- INSERT INTO booking
+-- (booking_id, schedule_id, user_id, status, created_at)
+-- VALUES
+-- ('BKG-1001', 1, 'USER-101', 'CONFIRMED', CURRENT_TIMESTAMP),
+-- ('BKG-1002', 1, 'USER-102', 'CREATED', CURRENT_TIMESTAMP),
+-- ('BKG-2001', 2, 'USER-201', 'CONFIRMED', CURRENT_TIMESTAMP);
+
+
+-- /* =========================================================
+--    BOOKING_SEAT
+--    ========================================================= */
+
+-- -- Booking BKG-1001 (2 seats)
+-- INSERT INTO booking_seat (booking_id, schedule_id, seat_id)
+-- VALUES
+-- ('BKG-1001', 1, 1),
+-- ('BKG-1001', 1, 2);
+
+-- -- Booking BKG-2001 (1 seat)
+-- INSERT INTO booking_seat (booking_id, schedule_id, seat_id)
+-- VALUES
+-- ('BKG-2001', 2, 6);
+
+
+-- /* =========================================================
+--    END OF SEED DATA
+--    ========================================================= */
+
