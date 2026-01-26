@@ -8,11 +8,13 @@ import com.ravidpatel.mybookingapp.entity.Booking;
 import com.ravidpatel.mybookingapp.entity.BookingSeat;
 import com.ravidpatel.mybookingapp.exceptions.SeatAlreadyBookedException;
 import com.ravidpatel.mybookingapp.exceptions.SeatException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
 
+import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
@@ -21,12 +23,22 @@ import java.util.Map;
 @Repository
 public class BookingRepository{
 
-    private final NamedParameterJdbcTemplate namedParameterJdbcTemplate;
+    @Autowired
+    public NamedParameterJdbcTemplate namedParameterJdbcTemplate;
+//
+//    public BookingRepository(NamedParameterJdbcTemplate namedParameterJdbcTemplate) {
+//        this.namedParameterJdbcTemplate = namedParameterJdbcTemplate;
+//    }
 
-    public BookingRepository(NamedParameterJdbcTemplate namedParameterJdbcTemplate) {
-        this.namedParameterJdbcTemplate = namedParameterJdbcTemplate;
-    }
+//    public static String INSERT_BOOKING = """
+//        INSERT INTO booking (booking_id, schedule_id, user_id, status, created_at) VALUES (:booking_id, :schedule_id, :user_id, :status, :created_at)
+//    """;
 
+    public static String INSERT_BOOKING_SEAT = """
+        INSERT INTO booking_seat
+        (booking_id, schedule_id, seat_id)
+        VALUES (:booking_id, :schedule_id, :seat_id)
+    """;
     public void validateSelectedSeats(BookingRequestDto bookingRequestDto){ // create race condition
         DbContextHolder.useSlave();
         Map<String, Object> params = new HashMap<>();
@@ -51,12 +63,12 @@ public class BookingRepository{
         DbContextHolder.useMaster();
         Map<String,Object> params = new HashMap<>();
         params.put("booking_id", booking.getBookingId());
-        params.put("show_id", booking.getScheduleId());
-        params.put("consumer_id", booking.getUserId());
-        params.put("booking_date", LocalDateTime.now());
-        params.put("booking_status", BookingStatus.CONFIRMED);
+        params.put("schedule_id", Long.valueOf(booking.getScheduleId()));
+        params.put("user_id",booking.getUserId());
+        params.put("created_at", Timestamp.valueOf(LocalDateTime.now()));
+        params.put("status", BookingStatus.CONFIRMED.name());
 
-        int success = namedParameterJdbcTemplate.update(BookingSql.INSERT_BOOKING, params);
+        int success = namedParameterJdbcTemplate.update("INSERT INTO booking (booking_id, schedule_id, user_id, status, created_at) VALUES (:booking_id, :schedule_id, :user_id, :status, :created_at)", params);
         if (success > 0) {
             System.out.println("successfully booking done...!");
         } else {
@@ -70,15 +82,15 @@ public class BookingRepository{
                 .map(bookingSeat -> {
                     Map<String, Object> map = new HashMap<>();
                     map.put("booking_id", bookingSeat.getBookingId());
-                    map.put("scheduled_id", bookingSeat.getScheduleId());
-                    map.put("seat_id", bookingSeat.getSeatId());
+                    map.put("schedule_id", Long.valueOf(bookingSeat.getScheduleId()));
+                    map.put("seat_id", Long.valueOf(bookingSeat.getSeatId()));
                     return map;
                 })
                 .toList();
 
         // payment
         try {
-            int[] successList = namedParameterJdbcTemplate.batchUpdate(BookingSql.INSERT_BOOKING_SEAT, listParams.toArray(new Map[0]));
+            int[] successList = namedParameterJdbcTemplate.batchUpdate(INSERT_BOOKING_SEAT, listParams.toArray(new Map[0]));
             if(successList.length > 0){
                 System.out.println("successfully seat reserved...!");
             }else{
@@ -93,7 +105,7 @@ public class BookingRepository{
 
 
     public Booking getBookingById(String bookingId){
-        Map<String, Object> params = Map.of("booking_id", bookingId);
+        Map<String, Object> params = Map.of("bookingId", bookingId);
         return namedParameterJdbcTemplate.queryForObject(
                 BookingSql.FIND_BOOKING_BY_ID,
                 params,

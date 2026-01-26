@@ -96,6 +96,7 @@ public class VenueService {
         List<Seat> seats = seatDtos.stream()
                 .map(dto -> {
                     Seat seat = entityToDtoSeat(dto);
+                    seat.setSpaceId(spaceId);
                     return seat;
                 })
                 .toList();

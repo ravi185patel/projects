@@ -7,19 +7,19 @@ public final class BookingSql {
     public static final String INSERT_BOOKING = """
         INSERT INTO booking
         (booking_id, schedule_id, user_id, status, created_at)
-        VALUES (:bookingId, :scheduleId, :userId, :status, :createdAt)
+        VALUES (:booking_id, :schedule_id, :user_id, :status, :created_at)
     """;
 
     public static final String INSERT_BOOKING_SEAT = """
         INSERT INTO booking_seat
         (booking_id, schedule_id, seat_id)
-        VALUES (:bookingId, :scheduleId, :seatId)
+        VALUES (:booking_id, :schedule_id, :user_id)
     """;
 
     public static final String FIND_BOOKING_BY_ID = """
         SELECT *
         FROM booking
-        WHERE booking_id = :bookingId
+        WHERE booking_id = :booking_id
     """;
 
     public static final String VALIDATE_SEAT_BY_SEAT_AND_SHOW_ID = """
